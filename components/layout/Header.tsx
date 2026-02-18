@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Bell, Search, X, RefreshCw, CheckCheck } from 'lucide-react'
+import { Bell, Search, X, RefreshCw, CheckCheck, Menu } from 'lucide-react'
 import Link from 'next/link'
 import { cn, formatTimeAgo } from '@/lib/utils'
 import type { Alerta } from '@/types'
@@ -13,10 +13,11 @@ interface HeaderProps {
   onMarcarLido: (id: string) => void
   onMarcarTodosLidos: () => void
   onRefresh?: () => void
+  onToggleSidebar: () => void
 }
 
 export default function Header({
-  titulo, subtitulo, alertas, onMarcarLido, onMarcarTodosLidos, onRefresh
+  titulo, subtitulo, alertas, onMarcarLido, onMarcarTodosLidos, onRefresh, onToggleSidebar
 }: HeaderProps) {
   const [showAlertas, setShowAlertas] = useState(false)
   const [search, setSearch] = useState('')
@@ -33,15 +34,25 @@ export default function Header({
   }
 
   return (
-    <header className="bg-white border-b border-border px-6 py-4 flex items-center justify-between sticky top-0 z-20 no-print">
-      <div>
-        <h1 className="text-xl font-bold text-primary">{titulo}</h1>
-        {subtitulo && <p className="text-sm text-text-muted mt-0.5">{subtitulo}</p>}
+    <header className="bg-white border-b border-border px-4 md:px-6 py-3 md:py-4 flex items-center justify-between sticky top-0 z-20 no-print">
+      <div className="flex items-center gap-3 min-w-0">
+        {/* Hambúrguer — só mobile */}
+        <button
+          onClick={onToggleSidebar}
+          className="md:hidden p-2 rounded-xl text-text-muted hover:text-accent hover:bg-surface transition-all flex-shrink-0"
+        >
+          <Menu size={22} />
+        </button>
+
+        <div className="min-w-0">
+          <h1 className="text-lg md:text-xl font-bold text-primary truncate">{titulo}</h1>
+          {subtitulo && <p className="text-xs md:text-sm text-text-muted mt-0.5 hidden sm:block truncate">{subtitulo}</p>}
+        </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        {/* Search */}
-        <div className="relative hidden sm:block">
+      <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+        {/* Search — desktop */}
+        <div className="relative hidden lg:block">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
           <input
             value={search}
@@ -85,8 +96,8 @@ export default function Header({
           </button>
 
           {showAlertas && (
-            <div className="absolute right-0 top-12 w-96 bg-white rounded-2xl shadow-dropdown border border-border z-50 slide-in-right">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+            <div className="absolute right-0 top-12 w-80 md:w-96 bg-white rounded-2xl shadow-dropdown border border-border z-50 slide-in-right max-h-[80vh] flex flex-col">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
                 <span className="font-semibold text-primary text-sm">
                   Alertas {naoLidos > 0 && <span className="text-danger">({naoLidos} novos)</span>}
                 </span>
@@ -105,7 +116,7 @@ export default function Header({
                 </div>
               </div>
 
-              <div className="max-h-96 overflow-y-auto">
+              <div className="overflow-y-auto flex-1">
                 {alertas.length === 0 ? (
                   <div className="px-4 py-8 text-center text-text-muted text-sm">
                     Nenhum alerta no momento
@@ -136,7 +147,7 @@ export default function Header({
                 )}
               </div>
 
-              <div className="px-4 py-3 border-t border-border text-center">
+              <div className="px-4 py-3 border-t border-border text-center flex-shrink-0">
                 <Link
                   href="/dashboard"
                   onClick={() => setShowAlertas(false)}

@@ -29,6 +29,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [alertas, setAlertas] = useState<Alerta[]>([])
   const [mensagensNaoLidas, setMensagensNaoLidas] = useState(0)
   const [ready, setReady] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  // Fecha o sidebar ao navegar no mobile
+  useEffect(() => {
+    setSidebarOpen(false)
+  }, [pathname])
 
   useEffect(() => {
     initStorage()
@@ -40,7 +46,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setUsuario(u)
     setAlertas(alertasStorage.getAll())
 
-    // Conta mensagens não lidas
     const conversas = chatStorage.getConversas()
     const total = conversas.reduce((acc, c) => acc + c.nao_lidas, 0)
     setMensagensNaoLidas(total)
@@ -95,10 +100,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         alertasNaoLidos={naoLidos}
         mensagensNaoLidas={mensagensNaoLidas}
         onLogout={handleLogout}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
 
-      {/* Main content — offset pela sidebar */}
-      <div className="flex-1 ml-64 flex flex-col min-h-screen">
+      {/* Main content — sem offset no mobile, com offset no desktop */}
+      <div className="flex-1 md:ml-64 flex flex-col min-h-screen w-full min-w-0">
         <Header
           titulo={pageInfo.titulo}
           subtitulo={pageInfo.subtitulo}
@@ -106,8 +113,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           onMarcarLido={handleMarcarLido}
           onMarcarTodosLidos={handleMarcarTodosLidos}
           onRefresh={refreshAlertas}
+          onToggleSidebar={() => setSidebarOpen(prev => !prev)}
         />
-        <main className="flex-1 p-6 fade-in">
+        <main className="flex-1 p-4 md:p-6 fade-in">
           {children}
         </main>
       </div>

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Truck, AlertTriangle, Package, BarChart3,
-  MessageSquare, Users, Settings, LogOut, Bell, Zap, ChevronRight
+  MessageSquare, Users, Settings, LogOut, Bell, Zap, ChevronRight, X
 } from 'lucide-react'
 import type { Usuario } from '@/types'
 import { cn } from '@/lib/utils'
@@ -13,8 +13,10 @@ import { nivelAcessoLabel, nivelAcessoCor } from '@/lib/utils'
 interface SidebarProps {
   usuario: Usuario
   alertasNaoLidos: number
-  onLogout: () => void
   mensagensNaoLidas: number
+  onLogout: () => void
+  isOpen: boolean
+  onClose: () => void
 }
 
 const navItems = [
@@ -28,23 +30,31 @@ const navItems = [
   { href: '/configuracoes', icon: Settings, label: 'Configurações', niveis: ['admin'] },
 ]
 
-export default function Sidebar({ usuario, alertasNaoLidos, onLogout, mensagensNaoLidas }: SidebarProps) {
+export default function Sidebar({ usuario, alertasNaoLidos, mensagensNaoLidas, onLogout, isOpen, onClose }: SidebarProps) {
   const pathname = usePathname()
-
   const itemsVisiveis = navItems.filter(item => item.niveis.includes(usuario.nivel_acesso))
 
-  return (
-    <aside className="w-64 min-h-screen bg-primary flex flex-col fixed left-0 top-0 z-30">
+  const sidebarContent = (
+    <aside className="w-64 min-h-screen bg-primary flex flex-col h-full">
       {/* Logo */}
       <div className="p-6 border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-accent rounded-xl flex items-center justify-center flex-shrink-0">
-            <Truck size={18} className="text-white" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-accent rounded-xl flex items-center justify-center flex-shrink-0">
+              <Truck size={18} className="text-white" />
+            </div>
+            <div>
+              <span className="text-white font-bold text-base">ExpedFontes</span>
+              <div className="text-slate-500 text-xs">Gestão Logística</div>
+            </div>
           </div>
-          <div>
-            <span className="text-white font-bold text-base">ExpedFontes</span>
-            <div className="text-slate-500 text-xs">Gestão Logística</div>
-          </div>
+          {/* Botão fechar só no mobile */}
+          <button
+            onClick={onClose}
+            className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+          >
+            <X size={18} />
+          </button>
         </div>
       </div>
 
@@ -58,13 +68,14 @@ export default function Sidebar({ usuario, alertasNaoLidos, onLogout, mensagensN
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {itemsVisiveis.map(item => {
-          const ativo = pathname.startsWith(item.href)
+          const ativo = pathname === item.href || pathname.startsWith(item.href + '/')
           const badge = item.href === '/rupturas' ? alertasNaoLidos : item.href === '/chat' ? mensagensNaoLidas : 0
 
           return (
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group',
                 ativo
@@ -112,5 +123,29 @@ export default function Sidebar({ usuario, alertasNaoLidos, onLogout, mensagensN
         </button>
       </div>
     </aside>
+  )
+
+  return (
+    <>
+      {/* Desktop: sidebar fixa */}
+      <div className="hidden md:block fixed left-0 top-0 z-30 h-screen w-64">
+        {sidebarContent}
+      </div>
+
+      {/* Mobile: overlay + drawer */}
+      {isOpen && (
+        <div className="md:hidden fixed inset-0 z-40 flex">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={onClose}
+          />
+          {/* Drawer */}
+          <div className="relative z-50 w-64 h-full overflow-y-auto slide-in-right">
+            {sidebarContent}
+          </div>
+        </div>
+      )}
+    </>
   )
 }
